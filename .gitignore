@@ -1,0 +1,13 @@
+...txt
+..txt
+.DS_Store
+.idea/
+output_html_files/
+output_movements.json
+output_movements.txt
+output_movements_cleantxt
+output_naf_files/
+output_txt_files/
+ramble_on_downlaod.py
+ramble_on_extractor.py
+
