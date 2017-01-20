@@ -1138,9 +1138,9 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
 
 
 
-# wiki_bio_download(list_file, "output_html_files")
-# clean_wiki_pages(list_file, "output_html_files", "output_txt_files")
-# txt_to_naf(list_file, "output_txt_files", "output_naf_files")
-# extract_movements ("output_naf_files",list_file, use_pantheon_file,pantheon_data_file,use_more_chains)
-# clean_na("output_movements.txt", "output_movements_cleantxt")
+wiki_bio_download(list_file, "output_html_files")
+clean_wiki_pages(list_file, "output_html_files", "output_txt_files")
+txt_to_naf(list_file, "output_txt_files", "output_naf_files")
+extract_movements ("output_naf_files",list_file, use_pantheon_file,pantheon_data_file,use_more_chains)
+clean_na("output_movements.txt", "output_movements_cleantxt")
 tab_to_json("output_movements_cleantxt", "output_movements.json")
