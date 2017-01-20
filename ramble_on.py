@@ -13,21 +13,21 @@ import time
 import sys, getopt
 import operator
 import codecs
+from ConfigParser import SafeConfigParser
 
+config = SafeConfigParser()
+config.read('config.ini')
+pikes_url = config.get('config', 'pikes_url')
+nominatim_url = config.get('config', 'nominatim_url')
+dbpedia_url = config.get('config', 'dbpedia_url')
+delay_db = float(config.get('config', 'delay_db'))
+delay_nominatim = float(config.get('config', 'delay_nominatim'))
 
-
-# list_file=sys.argv[1]
-pikes_url="http://simpatico.fbk.eu/pikes/text2naf"
-delay_db = 1
-delay_nominatim = 1
-#nominatim_url="http://rhodes.fbk.eu/nominatim"
-nominatim_url="http://nominatim.openstreetmap.org"
-dbpedia_url="https://dbpedia.org/sparql"
 
 use_pantheon_file = False
 use_more_chains = False
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "p:el:",["",""])
+    opts, args = getopt.getopt(sys.argv[1:], "p:el:o:",["","",""])
 except getopt.GetoptError:
     sys.exit(2)
 for opt, arg in opts:
@@ -38,6 +38,8 @@ for opt, arg in opts:
         use_more_chains=True
     if opt == '-l':
         list_file = arg
+    if opt == '-o':
+        movements_output_file = arg
 
 
 def wiki_bio_download (list_file_name, out_dir):
@@ -121,9 +123,9 @@ def clean_na (file_mov, file_clean):
             output_file.write(line.encode("utf-8"))
     output_file.close()
 
-def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file,use_more_chains):
-    out_movements_file = open("output_movements.txt","w")
-
+def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon_file,pantheon_data_file,use_more_chains):
+    sys.stdout.write('Extracting movements from .naf files (it may take long):')
+    out_movements_file = open(movements_output_file,"w")
     n_done=1
     dict_nation = dict()
     dict_profession = dict()
@@ -131,20 +133,15 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
     dict_area = dict()
     dict_gender = dict()
     dict_continent = dict()
-
     set_person_list= set()
 
     for line in open(list_file):
         set_person_list.add(line.rstrip('\n'))
 
-
-
     if use_pantheon_file==True:
         for line in open(pantheon_data_file):
-
             splitted_line = line.split('\t')
             splitted_line[1] = re.sub(r' ', '_', splitted_line[1])
-
             dict_nation[splitted_line[1]] = splitted_line[6]
             dict_profession[splitted_line[1]] = splitted_line[11]
             dict_group[splitted_line[1]] = splitted_line[12]
@@ -182,7 +179,8 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
 
 
     def birth_death (name, sparql_url):
-        # ESTRAE DOVE E' NATO E MORTO da dbpedia
+        # extract from dbpadia date and place of birth and death
+        # spaql url can be set in the config file
         delay_db = 1
         name = re.sub(r' ', '_', name)
         query_birth_city_dbp = "prefix dbo: <http://dbpedia.org/ontology/> prefix georss: <http://www.georss.org/georss/> select ?birthPlace ?coords where {<http://dbpedia.org/resource/" + name + "> <http://dbpedia.org/ontology/birthPlace> ?birthPlace .FILTER (EXISTS {?birthPlace rdf:type dbo:Town} || EXISTS {?birthPlace rdf:type dbo:City}) .?birthPlace georss:point ?coords .}"
@@ -276,14 +274,12 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
         return (location_b,year_b,location_d,year_d)
 
 
-
-
     def georeference (location_string, nominatim_url):
+        # use nominatim to find the coordinates of a place
         lat="NA"
         lon="NA"
 
         try:
-            url_streetmap = ''
             location_api = urllib.quote(location_string)
             url_streetmap = nominatim_url + "/search.php?q=" + location_api + "&format=json"
             time.sleep(delay_nominatim)
@@ -311,7 +307,6 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                         splitted_location = location_temp.split('\t')
 
                         for word in splitted_location:
-                            url_streetmap = ''
                             location_api = urllib.quote(word)
                             url_streetmap = nominatim_url + "/search.php?q=" + location_api + "&format=json"
                             time.sleep(delay_nominatim)
@@ -322,14 +317,12 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                 js_s = json.loads(json_response_s)
                                 if js_s:
                                     if js_s[0]['type'] != 'locality':
-                                        location_string = word
                                         lat = js_s[0]['lat']
                                         lon = js_s[0]['lon']
                                 else:
                                     if ' ' in word:
                                         word_loc_list = word.split(' ')
                                         for w in word_loc_list:
-                                            url_streetmap = ''
                                             location_api = urllib.quote(w)
                                             url_streetmap = nominatim_url + "/search.php?q=" + location_api + "&format=json"
                                             time.sleep(delay_nominatim)
@@ -342,14 +335,12 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                     if js_s[0]['type'] == 'city' \
                                                             or js_s[0]['type'] == "village" \
                                                             or js_s[0]['type'] == "town":
-                                                        location_string = w
                                                         lat = js_s[0]['lat']
                                                         lon = js_s[0]['lon']
                                                     else:
                                                         if lat == '':
                                                             lat = "NA"
                                                             lon = "NA"
-
                                             except URLError, e:
                                                 print 'error1', e
 
@@ -367,7 +358,6 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                             word_loc_list = word.split(' ')
                                             for w in word_loc_list:
                                                 if w not in banned_words:
-                                                    url_streetmap = ''
                                                     location_api = urllib.quote(w)
                                                     url_streetmap = nominatim_url + "/search.php?q=" + location_api + "&format=json"
                                                     time.sleep(delay_nominatim)
@@ -380,7 +370,6 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                         if js_s:
                                                             if js_s[0]['type'] != 'locality':
                                                                 if js_s[0]['class'] == 'boundary':
-                                                                    location_string = w
                                                                     lat = js_s[0]['lat']
                                                                     lon = js_s[0]['lon']
                                                                 else:
@@ -389,19 +378,14 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                                         lon = "NA"
                                                     except URLError, e:
                                                         print 'error2', e
-
                                         else:
                                             if lat == '':
                                                 lat = "NA"
                                                 lon = "NA"
-
                             except URLError, e:
                                 print 'error3', e
-
-
             except URLError, e:
                 print 'error4', e
-
         except URLError, e:
             print 'error5', e
 
@@ -412,7 +396,6 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
             list_check=file
             list_check = re.sub(r'\.naf', '', list_check)
             if list_check in set_person_list:
-
                 my_parser = KafNafParser(naf_folder+"/"+file)
                 movements_found = 0
                 movements_number=0
@@ -421,7 +404,6 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                 dict_loc_full = dict()
                 dict_sent = dict()
                 list_coref_w = []
-                # CREA DIZIONARI W->T e T-W
                 dict_w_to_t = dict()
                 dict_t_to_w = dict()
                 dict_t_to_lemma = dict()
@@ -457,16 +439,11 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                         for t in dict_w_to_t[idlemma]:
                             dict_t_to_lemma[t] = term_obj.get_lemma()
 
-                # Legge il nome del file
-                # file_name = re.sub(r'\.naf', '', file)
+                # Read file name from .naf metadata
                 file_name = my_parser.get_header().get_fileDesc().get_filename()
                 enc_file_name = file_name.encode("utf8")
-                # print enc_file_name
 
-
-
-                # ESTRAE DOVE E' NATO E MORTO da dbpedia
-
+                # extract birth and death info from dbpedia
                 dbpedia_target = enc_file_name
                 dbpedia_target = re.sub(r'\.txt', '', dbpedia_target)
                 dbpedia_target = re.sub(r' ', '_', dbpedia_target)
@@ -478,52 +455,31 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                 location_d = re.sub(r'_', ' ', location_d)
                 (lat_d, lon_d) = georeference(location_d, nominatim_url)
 
-
-            # FINE DBPEDIA
-
-
-
-                # CERCA LA PRIMA PERSON CHE CORRISPONDE AL TITOLO
-                person_match_found = 0
-                # print enc_file_name
+                # looks for entities matching with the name of the page
                 sys.stdout.write('\n')
-                sys.stdout.write(str(n_done))
+                sys.stdout.write('    '+str(n_done)+'\t'+enc_file_name+'\t')
                 n_done = n_done + 1
-                sys.stdout.write('\t')
-                sys.stdout.write(enc_file_name)
-                sys.stdout.write('\t')
                 enc_file_name = re.sub(r'\.txt', '', enc_file_name)
                 enc_file_name = re.sub(r' ', '_', enc_file_name)
-
-
                 set_t_sbj_match = set()
                 set_t_sbj_exact_match = set()
                 set_t_sbj_match_temp = set()
                 set_exact_match_entities_id_lists=set()
-                # controlla il tipo della prima entita
+
                 for entity_obj in my_parser.get_entities():
 
                     string_to_print = ''
                     w_id_to_print = ''
-                    # if person_match_found==1:
-                    #	break
                     entity_type = entity_obj.get_type()
-                    entity_id = entity_obj.get_id()
 
                     if entity_type == 'PERSON':
-                        # print file
-                        # sys.stdout.write('\n')
-                        # estrae i term
                         for entity_ref in entity_obj.get_references():
                             entity_span = entity_ref.get_span()
                             entity_span_list_id = entity_span.get_span_ids()
-
-                            # stampa le word associate ai term dell'entita'
                             entity_span_list_temp= set()
                             for item in entity_span_list_id:
-                                # print item
                                 entity_span_list_temp.add(item)
-                                set_t_sbj_match_temp.add(item)  # salva qui l'id delle person che fanno match
+                                set_t_sbj_match_temp.add(item)  # save the id of the person matching the subject of the biography
                                 w_id_to_print = w_id_to_print + ' ' + item
                                 for word_id in dict_t_to_w[item]:
                                     stringa = my_parser.get_token(word_id).get_text()
@@ -545,35 +501,25 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                 set_t_sbj_match_temp = set()
 
                 # trova la coreferenc da usare per estrarre le frasi
-                set_subject_coreferences = set()
                 dict_matching_coreferences = dict()
                 dict_exact_matching_coreferences = dict()
-                coref_found = 0
                 for coref_obj in my_parser.get_corefs():
                     span_counter = 0
                     for span_item in coref_obj.get_spans():
                         span_counter += 1
                     for coref_span in coref_obj.get_spans():
                         coref_span_id = coref_span.get_span_ids()
-                        # print tuple(coref_span_id)
-                        # print type(coref_span_id)
                         for c_id in coref_span_id:
                             if c_id in set_t_sbj_match:
                                 coref_subject = coref_obj.get_id()
                                 dict_matching_coreferences[coref_subject] = []
                                 dict_matching_coreferences[coref_subject].append(span_counter)
-                                coref_found = 1
-                                # break
                         if tuple(coref_span_id) in set_exact_match_entities_id_lists:
                             coref_subject = coref_obj.get_id()
                             dict_exact_matching_coreferences[coref_subject] = []
                             dict_exact_matching_coreferences[coref_subject].append(span_counter)
-                            coref_found = 1
-                            # break
 
-                # trova la co del soggetto con piu' span
-
-
+                # find the main coreference chain
                 if not dict_matching_coreferences:
                     sys.stdout.write('\tNo valid coreference chains\t')
                     enc_file_name = re.sub(r'\.txt', '', enc_file_name)
@@ -592,17 +538,15 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                 for co in coref_chains_to_use:
                     sys.stdout.write(co)
                     sys.stdout.write('\t')
-                # coref_chains_to_use.remove(most_instance_co) #skywalker
+                # coref_chains_to_use.remove(most_instance_co)
 
-                # estrarre numero sentence e w corrispondenti per ogni sentence
                 for token_obj in my_parser.get_tokens():
                     if not dict_sent.has_key(token_obj.get_sent()):
                         dict_sent[token_obj.get_sent()] = []
                     dict_sent[token_obj.get_sent()].append(token_obj.get_id())
 
-                # prende le t di tutte gli span della coreference co1
+                # find the term id of the coreferences
                 for coref_obj in my_parser.get_corefs():
-                    # coreference da usare
                     if coref_obj.get_id() in coref_chains_to_use:
                         for coref_span in coref_obj.get_spans():
                             for coref_span_term_id in coref_span.get_span_ids():
@@ -615,110 +559,70 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                 for key in list_coref_w:
                     for sent_num in dict_sent.keys():
                         if key in dict_sent.get(sent_num):
-                            sent_to_keep.add(
-                                sent_num)  # aggiunge al set i numeri di frase che contengono una coreferenza a co1, numeri unici no duplicati
-                # print sent_to_keep
+                            sent_to_keep.add(sent_num)  # save the id of the sentences containing a coreference
 
                 for sent_num in dict_sent.keys():
                     if sent_num not in sent_to_keep:
-                        dict_sent.pop(sent_num)  # rimuove dal dizionario le frasi che non contengono una coreferenza a co1
+                        dict_sent.pop(sent_num)  # remove the sentences not containing coreferences
 
-                # lista della prima w che appartiene ad una timex
+                # find word ids of temporal expressions
                 for time_obj in my_parser.get_timeExpressions():
                     time_span = time_obj.get_span()
-
                     if time_span is not None:
                         if time_obj.get_type() == "DATE":
                             if not nottoinclude.search(time_obj.get_value()):
                                 if time_obj.get_value()[:4].isdigit() is True:
                                     if int(time_obj.get_value()[:4]) <  1956 \
                                         and int(time_obj.get_value()[:4]) >  1899:
-                                    # if "****" not in time_obj.get_value():
-                                        time_span_list = time_span.get_span_ids()  # print 'timex span',time_span_list[0] da mettere sotto per provare
+                                        time_span_list = time_span.get_span_ids()
                                         dict_timex[time_span_list[0]] = time_obj
-                                        #print time_obj.get_value()
-
-                                # print dict_timex
-                # sys.exit()
-
-
-
-
                 sent_to_keep = set()
                 for key in dict_timex.keys():
                     for sent_num in dict_sent.keys():
                         if key in dict_sent.get(sent_num):
                             sent_to_keep.add(
-                                sent_num)  # aggiunge al set i numeri di frase che contengono una timex, numeri unici no duplicati
-                # print sent_to_keep
+                                sent_num)  # save the id of the sentences containing a timex
 
                 for sent_num in dict_sent.keys():
                     if sent_num not in sent_to_keep:
-                        dict_sent.pop(sent_num)  # rimuove dal dizionario le frasi che non contengono una timex
+                        dict_sent.pop(sent_num)  # remove the sentences not containing a timex
 
-                # lista della prima w che appartiene ad una location
+                # find word ids of locations
                 for entity_obj in my_parser.get_entities():
                     entity_type = entity_obj.get_type()
                     entity_id = entity_obj.get_id()
                     if (entity_type == 'LOCATION' or entity_type == 'ORGANIZATION'):
                         for entity_ref in entity_obj.get_references():
-
-                            # svolgimento della rigona che da' entity head
-                            # entity_span = entity_ref.get_span()
-                            # entity_span_list_id = entity_span.get_span_ids()
-                            # first_element_of_entity_span_id_list = entity_span_list_id[0]
-
-                            # term_obj = my_parser.get_term(first_element_of_entity_span_id_list)
-                            # span_of_term_obj = term_obj.get_span()
-                            # list_of_ids_of_term_obj_span = span_of_term_obj.get_span_ids()
-                            # entity_head = list_of_ids_of_term_obj_span[0]
-
-
                             entity_head = \
                                 (my_parser.get_term((entity_ref.get_span().get_span_ids())[0])).get_span().get_span_ids()[0]
-                            # print entity_head
                             dict_loc[entity_head] = entity_obj
-
                             for loc_span_id in entity_ref.get_span().get_span_ids():
                                 for s in dict_t_to_w[loc_span_id]:
                                     dict_loc_full[s] = entity_obj
-                                    # print dict_loc
-                                    # print entity_head
-                # print dict_loc_full.keys()
-                # print dict_sent.keys()
 
                 sent_to_keep = set()
                 for key in dict_loc.keys():
                     for sent_num in dict_sent.keys():
                         if key in dict_sent.get(sent_num):
                             sent_to_keep.add(
-                                sent_num)  # aggiunge al set i numeri di frase che contengono una loc, numeri unici no duplicati
-                # print sent_to_keep
+                                sent_num)  # save the id of the sentences containing a location
 
                 for sent_num in dict_sent.keys():
                     if sent_num not in sent_to_keep:
-                        dict_sent.pop(sent_num)  # rimuove dal dizionario le frasi che non contengono una location
-                # print dict_sent.keys() #stampa l'id delle sentence che corrispondono alle nostre caratteristiche
-
-
+                        dict_sent.pop(sent_num)  # remove the sentences not containing locations
 
                 w_in_sentences = set()
                 terms_in_sencences = set()
 
-                # trova tutte le t nelle frasi che hanno sbj+location+time
-                # e le salva nel set terms_in_sencences
+                # find the words in the candidate sentences (containing subject+location+temporal expression)
                 for sentence_id in dict_sent.keys():
-                    # print sentence_id
                     for w_id in dict_sent[sentence_id]:
                         w_in_sentences.add(w_id)
-
                     for w_t in w_in_sentences:
                         for w in dict_w_to_t[w_t]:
                             terms_in_sencences.add(w)
 
                     w_in_sentences = set()
-
-
                 list_predicates_w = set()
 
                 for my_clink in my_parser.get_predicates():
@@ -791,24 +695,19 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                     need_nothing = True
                                 resource = ref.get_resource()
                                 reference = ref.get_reference()
-
-                                # mette tutti i roles del frame in "roles"
-                                roles = ()
                                 roles = my_clink.get_roles()
 
-                                # controlla se il frame e' nelle frasi che vogliamo tenere
+                                # check if the frame is in the candidate sentences
                                 for span in clink_span:
                                     if span.get_id() in terms_in_sencences:
-                                        # trova l'id della frase a cui appartiene il frame
+                                        # find the id of the sentence for this frame
                                         for w in dict_t_to_w[span.get_id()]:
                                             for sent in dic_word_to_sentence[w]:
                                                 id_sentence_to_print = sent
-
-                                        # se e' a 1 cerca la timex in tutta la frase , se e' a 0 solo nel frame
                                         cerca_timex_in_tutta_la_frase = 1
 
                                         if cerca_timex_in_tutta_la_frase == 1:
-                                            # trova l'id della frase del predicate
+                                            # find the id of the sentence for the predicate
                                             for w in dict_t_to_w[span.get_id()]:
                                                 for i_p_s in dic_word_to_sentence[w]:
                                                     id_precicate_sentence = i_p_s
@@ -823,19 +722,14 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                             timex_found = 1
                                                             timex_to_print = timex_to_print + t_span_value + '_' + t_timex
                                                             timex_to_print = timex_to_print + ' '
-                                                            timex_role_to_print = ''
 
 
                                         theme,employee,entity,resident,self_mover,student,cotheme = None, None, None, None, None, None, None
 
-
                                         for rol in roles:
-
                                             rol_span = rol.get_span()
 
-
-
-                                            # CONTROLLA CHE NON CI SIANO NEGAZIONI
+                                            # check for negations
                                             if "AM-NEG" == rol.get_sem_role():
                                                 negation_found = 1
 
@@ -867,7 +761,7 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                 if (role_filter('FrameNet', 'Student', rol, rol_span, dict_t_to_w, list_coref_w)) == 1:
                                                     student = True
 
-                                            # trova le date nello span del frame
+                                            # find dates in the frame
                                             if cerca_timex_in_tutta_la_frase == 0:
                                                 rol_ext_ref = rol.get_external_references()
                                                 for pred_ext_ref in rol_ext_ref:
@@ -897,11 +791,9 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                                     timex_to_print = timex_to_print + ' '
                                                                     timex_role_to_print = '@' + rol.get_sem_role()
 
-                                            # qui ci sono i filtri ai semantic role delle locations
+                                            # filters to semantic roles for locations
                                             rol_ext_ref = rol.get_external_references()
-
                                             for pred_ext_ref in rol_ext_ref:
-                                                #"Attending" == ref.get_reference()
                                                 if 'FrameNet' in pred_ext_ref.get_resource():
                                                     semantic_role = pred_ext_ref.get_reference()
                                                     sem_rol_split = semantic_role.split("@")
@@ -912,7 +804,7 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                         for rol_id in rol_span:
                                                             for i in dict_t_to_w[rol_id.get_id()]:
                                                                 if i in dict_loc_full and location_found == 0:
-                                                                    loc = dict_loc_full[i]  ####DIC_LOC
+                                                                    loc = dict_loc_full[i]
                                                                     for ref in loc.get_references():
                                                                         for loc_id in ref.get_span().get_span_ids():
                                                                             for w in dict_t_to_w[loc_id]:
@@ -962,10 +854,8 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                             role_to_print = '@' + sem_rol_split[1]
                                                             break
 
-                                        # Se impostato a 1 stampa la frase
-                                        # print_sentence = 1
+
                                         sentence_to_print = ''
-                                        # if print_sentence == 1:
                                         for w in dic_sentence_to_words[id_sentence_to_print]:
                                             for w in dic_words[w]:
                                                 sentence_to_print = sentence_to_print + w
@@ -976,7 +866,7 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                         sentence_to_print = sentence_to_print.strip(' ')
 
                                         exlude_predicate = 0
-                                        ####INSERIRE QUI I LEMMI DA SCARTARE
+                                        # lemmas to discard
                                         if dict_t_to_lemma[span.get_id()] == "survey" \
                                                 or dict_t_to_lemma[span.get_id()] == "investigation" \
                                                 or dict_t_to_lemma[span.get_id()] == "investigate" \
@@ -1027,11 +917,6 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
 
                                                 #### START GEOCODING
                                                 (lat, lon) = georeference(location_string, nominatim_url)
-
-
-                                                # Stampa t del predicato e il predicato
-
-
                                                 enc_file_name = re.sub(r'\.txt', '', enc_file_name)
                                                 enc_file_name = re.sub(r' ', '_', enc_file_name)
 
@@ -1063,8 +948,7 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                 out_movements_file.write(reference)
                                                 out_movements_file.write('\t')
 
-
-                                                # parte che pulisce le date doppie
+                                                # clean duplicates
                                                 timex_array_cell_to_remove = list()
                                                 if ' ' in timex_to_print:
                                                     timex_no_interval = re.sub(r'\/[0-9]+', '', timex_to_print)
@@ -1105,8 +989,6 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                                                 movements_number=movements_number+1
                                                 movements_found = 1
 
-
-
                 if movements_found == 0:
                     sys.stdout.write('No movements identified')
                 else:
@@ -1118,29 +1000,22 @@ def extract_movements (naf_folder,list_file,use_pantheon_file,pantheon_data_file
                 if use_pantheon_file == True:
                     out_movements_file.write( enc_file_name  + '\t' + dict_nation[enc_file_name] + '\t' + dict_continent[enc_file_name] + '\t' + dict_gender[enc_file_name] + '\t' + dict_profession[enc_file_name] + '\t' + dict_group[enc_file_name] + '\t' +dict_area[enc_file_name].strip('\n')  + '\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Birth_' + '\t' + str(year_b) + '\t'+ location_b  + '\t' + 'null_' + "\t" + "lat: " + lat_b.encode("utf8") + '\t'+ "lon: " + lon_b.encode("utf8") )
                     out_movements_file.write('\tnull_\n')
-
                     out_movements_file.write( enc_file_name + '\t' + dict_nation[enc_file_name] + '\t' + dict_continent[enc_file_name] + '\t' + dict_gender[enc_file_name] + '\t' + dict_profession[enc_file_name] + '\t' + dict_group[enc_file_name] + '\t' +dict_area[enc_file_name].strip('\n') + '\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Death_' + '\t' + str(year_d)+ '\t' + location_d + '\t' + 'null_' + "\t" + "lat: " + lat_d.encode("utf8") + '\t' + "lon: " + lon_d.encode("utf8") )
                     out_movements_file.write('\tnull_\n')
                 else:
                     out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Birth_' + '\t' + str(year_b) + '\t' + location_b + '\t' + 'null_' + "\t" + "lat: " + lat_b.encode("utf8") + '\t' + "lon: " + lon_b.encode("utf8"))
                     out_movements_file.write('\tnull_\n')
-
                     out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Death_' + '\t' + str(year_d) + '\t' + location_d + '\t' + 'null_' + "\t" + "lat: " + lat_d.encode("utf8") + '\t' + "lon: " + lon_d.encode("utf8"))
                     out_movements_file.write('\tnull_\n')
-
-
-
-
 
     out_movements_file.close()
     sys.stdout.write('\n')
 
 
 
-
 wiki_bio_download(list_file, "output_html_files")
 clean_wiki_pages(list_file, "output_html_files", "output_txt_files")
 txt_to_naf(list_file, "output_txt_files", "output_naf_files")
-extract_movements ("output_naf_files",list_file, use_pantheon_file,pantheon_data_file,use_more_chains)
-clean_na("output_movements.txt", "output_movements_cleantxt")
-tab_to_json("output_movements_cleantxt", "output_movements.json")
+extract_movements ("output_naf_files",list_file, movements_output_file+".txt", use_pantheon_file,pantheon_data_file,use_more_chains)
+clean_na(movements_output_file+".txt", movements_output_file+"_clean.txt")
+tab_to_json(movements_output_file+"_clean.txt", movements_output_file+".json")
