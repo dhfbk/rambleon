@@ -76,9 +76,10 @@ def clean_wiki_pages(list_file_name, html_files_dir, out_dir):
 
 def txt_to_naf(list_file_name, txt_files_dir, out_dir):
     sys.stdout.write('Converting texts to .naf files (each file will take some minutes, depending on its length):\n')
-    document=u''
+ 
     #for name in codecs.open(list_file_name, 'r', "utf-8"):
     for name in open(list_file_name):
+        document = u''
         name = name.rstrip('\n')
         txt_path = txt_files_dir + "/" + name + ".txt"
         naf_path = out_dir + "/" + name + ".naf"
