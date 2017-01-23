@@ -1,8 +1,12 @@
 # rambleon
 Ramble On
 
+
 Requirements:
+This script requires `KafNafParserPy` and `SPARQLWrapper` modules.
+To install them:
 ```
+sudo easy_install pip
 pip install --user KafNafParserPy 
 pip install --user SPARQLWrapper
 ```
