@@ -23,7 +23,7 @@ pip install --user SPARQLWrapper
 
 To run the code:
 ```
-python ramble_on.py -l list.txt  -p pantheon_subset.txt -e -o output_movements_all
+python ramble_on.py -l list.txt  -p pantheon_subset.txt -e -o output_movements
 ```
 
 Parameters:
