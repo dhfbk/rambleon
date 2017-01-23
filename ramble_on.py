@@ -75,7 +75,7 @@ def clean_wiki_pages(list_file_name, html_files_dir, out_dir):
     sys.stdout.write("All files converted to text\n")
 
 def txt_to_naf(list_file_name, txt_files_dir, out_dir):
-    sys.stdout.write('Converting texts to .naf files (it may take long):\n')
+    sys.stdout.write('Converting texts to .naf files (each file will take some minutes, depending on its length):\n')
     document=u''
     #for name in codecs.open(list_file_name, 'r', "utf-8"):
     for name in open(list_file_name):
@@ -127,7 +127,7 @@ def clean_na (file_mov, file_clean):
     output_file.close()
 
 def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon_file,pantheon_data_file,use_more_chains):
-    sys.stdout.write('Extracting movements from .naf files (it may take long):')
+    sys.stdout.write('Extracting movements from .naf files:')
     out_movements_file = open(movements_output_file,"w")
     n_done=1
     dict_nation = dict()
