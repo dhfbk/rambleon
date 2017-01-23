@@ -75,26 +75,29 @@ def clean_wiki_pages(list_file_name, html_files_dir, out_dir):
     sys.stdout.write("All files converted to text\n")
 
 def txt_to_naf(list_file_name, txt_files_dir, out_dir):
+    sys.stdout.write('Converting texts to .naf files (it may take long):\n')
     document=u''
-    for name in codecs.open(list_file_name, 'r', "utf-8"):
+    #for name in codecs.open(list_file_name, 'r', "utf-8"):
+    for name in open(list_file_name):
         name = name.rstrip('\n')
         txt_path = txt_files_dir + "/" + name + ".txt"
         naf_path = out_dir + "/" + name + ".naf"
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-
         if not os.path.exists(naf_path):
             sys.stdout.write("    "+name + "->.naf\n")
             for line in codecs.open(txt_path, 'r', "utf-8"):
                 line = line.rstrip('\n')
                 document=document+" "+line
             document = urllib2.quote(document.encode('utf8'), ':/')
+            #data="text="+document
             data="meta_title="+name+"&meta_filename="+name+"&text="+document
             req = urllib2.Request(pikes_url, data)
             response = urllib2.urlopen(req)
             naf = response.read()
             response = naf.decode('utf8')
             outname = out_dir + "/" + name + ".naf"
+            # outname=outname.decode("utf-8")
             naf_out = codecs.open(outname, 'w', "utf-8")
             naf_out.write(response)
     sys.stdout.write("All files converted to .naf\n")
@@ -135,7 +138,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
     dict_continent = dict()
     set_person_list= set()
 
-    for line in open(list_file):
+    for line in codecs.open(list_file, 'r', "utf-8"):
         set_person_list.add(line.rstrip('\n'))
 
     if use_pantheon_file==True:
@@ -275,7 +278,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
 
 
     def georeference (location_string, nominatim_url):
-        # use nominatim to find the coordinates of a place
+        # query to nominatim for the coordinates of a place
         lat="NA"
         lon="NA"
 
@@ -392,10 +395,13 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
         return(lat,lon)
 
     for file in os.listdir(naf_folder):
+        file_found=0
+
         if file.endswith(".naf"):
+
             list_check=file
             list_check = re.sub(r'\.naf', '', list_check)
-            if list_check in set_person_list:
+            if file==file:
                 my_parser = KafNafParser(naf_folder+"/"+file)
                 movements_found = 0
                 movements_number=0
@@ -500,7 +506,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                             else:
                                 set_t_sbj_match_temp = set()
 
-                # trova la coreferenc da usare per estrarre le frasi
+                # find the coreference to use
                 dict_matching_coreferences = dict()
                 dict_exact_matching_coreferences = dict()
                 for coref_obj in my_parser.get_corefs():
@@ -580,8 +586,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                 for key in dict_timex.keys():
                     for sent_num in dict_sent.keys():
                         if key in dict_sent.get(sent_num):
-                            sent_to_keep.add(
-                                sent_num)  # save the id of the sentences containing a timex
+                            sent_to_keep.add(sent_num)  # save the id of the sentences containing a timex
 
                 for sent_num in dict_sent.keys():
                     if sent_num not in sent_to_keep:
@@ -648,7 +653,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                     employee_found = 0
                     negation_found = 0
                     need_nothing = None
-                    # individua se il frame ci interessa
+
                     for ref in ext_refs:
 
                         if "FrameNet" == ref.get_resource() and ("Fleeing" == ref.get_reference() \
@@ -704,9 +709,9 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                         for w in dict_t_to_w[span.get_id()]:
                                             for sent in dic_word_to_sentence[w]:
                                                 id_sentence_to_print = sent
-                                        cerca_timex_in_tutta_la_frase = 1
+                                        timex_in_sentence = 1
 
-                                        if cerca_timex_in_tutta_la_frase == 1:
+                                        if timex_in_sentence == 1:
                                             # find the id of the sentence for the predicate
                                             for w in dict_t_to_w[span.get_id()]:
                                                 for i_p_s in dic_word_to_sentence[w]:
@@ -762,7 +767,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                                     student = True
 
                                             # find dates in the frame
-                                            if cerca_timex_in_tutta_la_frase == 0:
+                                            if timex_in_sentence == 0:
                                                 rol_ext_ref = rol.get_external_references()
                                                 for pred_ext_ref in rol_ext_ref:
                                                     if 'FrameNet' in pred_ext_ref.get_resource():
@@ -906,14 +911,14 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                                 lon = ''
 
 
-                                                location_string = re.sub(r'(S|s)outh of ', '', location_string)
-                                                location_string = re.sub(r'(N|n)orth of ', '', location_string)
-                                                location_string = re.sub(r'(E|e)ast of ', '', location_string)
-                                                location_string = re.sub(r'(W|w)est of ', '', location_string)
-                                                location_string = re.sub(r'(S|s)outhern ', '', location_string)
-                                                location_string = re.sub(r'(N|n)orthern ', '', location_string)
-                                                location_string = re.sub(r'(E|e)astern ', '', location_string)
-                                                location_string = re.sub(r'(W|w)eastern ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](S|s)outh of ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](N|n)orth of ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](E|e)ast of ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](W|w)est of ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](S|s)outhern ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](N|n)orthern ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](E|e)astern ', '', location_string)
+                                                location_string = re.sub(r'[^A-Za-z](W|w)eastern ', '', location_string)
 
                                                 #### START GEOCODING
                                                 (lat, lon) = georeference(location_string, nominatim_url)
