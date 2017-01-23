@@ -13,11 +13,7 @@ python ramble_on.py -l list.txt  -p pantheon_subset.txt -e -o output_movements_a
 ```
 
 Parameters:
-
--l  file containing the list of names
-
--o  name of the output
-
--p files with metadata from the Pantheon dataset (optional)
-
--e  extend the number of corefence chains to use
+* `-l`  file containing the list of names
+* `-o`  name of the output
+* `-p` files with metadata from the Pantheon dataset (optional)
+* `-e`  extend the number of corefence chains to use
