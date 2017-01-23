@@ -13,7 +13,7 @@ The script returns three files as output:
 
 
 Requirements:
-This script requires `KafNafParserPy` and `SPARQLWrapper` python modules.
+This script requires the `KafNafParserPy` and `SPARQLWrapper` python modules.
 To install them:
 ```
 sudo easy_install pip
@@ -31,3 +31,7 @@ Parameters:
 * `-o`  name of the output
 * `-p` files with metadata from the Pantheon dataset (optional). This file is not necessary, but, if present, it provides the information needed by the Ramble On Navigator to filter the queries (e.g. by nation or profession)
 * `-e`  extend the number of corefence chains to use
+
+Services used:
+
+This script relies on `Pikes`, `Nominatim` and `DBpedia`. The urls of these services can be configured in the file `config.ini`. For an heavy use of this script (e.g. dozens of biographies) we suggest to install these services locally.
