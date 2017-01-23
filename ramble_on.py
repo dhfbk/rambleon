@@ -260,7 +260,8 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
             for result in results['results']['bindings']:
                 year_b = result['birthDate']['value']
                 year_b = re.sub(r'http://dbpedia.org/resource/', '', year_b)
-                year_b = re.sub(r'-', '', year_b)
+                # year_b = re.sub(r'-', '', year_b)
+                year_b = year_b.replace('-', '')
         except URLError, e:
             print 'error', e
 
@@ -271,7 +272,8 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
             for result in results['results']['bindings']:
                 year_d = result['deathDate']['value']
                 year_d = re.sub(r'http://dbpedia.org/resource/', '', year_d)
-                year_d = re.sub(r'-', '', year_d)
+                # year_d = re.sub(r'-', '', year_d)
+                year_d = year_d.replace('-', '')
         except URLError, e:
             print 'error', e
 
@@ -974,6 +976,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                                 timex_to_print = timex_to_print_list[0]
                                                 timex_to_print = re.sub(r'\*\*01', '0000', timex_to_print)
                                                 timex_to_print = re.sub(r'\*\*02', '0000', timex_to_print)
+                                                timex_to_print = timex_to_print.replace('-', '')
                                                 out_movements_file.write(timex_to_print)
                                                 out_movements_file.write('\t')
                                                 out_movements_file.write(location_string)
