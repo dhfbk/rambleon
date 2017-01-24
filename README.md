@@ -2,9 +2,7 @@
 Ramble On
 
 This script takes a list of persons and extracts all their movement starting from their English Wikipedia page.
-The names of the persons in the list must be the same of their Wikipedia url, 
-
-e.g. `https://en.wikipedia.org/wiki/Albert_Einstein` -> `Albert_Einstein` . An example of the list can be found in the file `list.txt`
+The file need to be encoded in `utf-8` and the names of the persons in the list must be the same used in their Wikipedia url, e.g. `https://en.wikipedia.org/wiki/Albert_Einstein` -> `Albert_Einstein` . An example of the list can be found in the file `list.txt`
 
 The script returns three files as output:
 * A `.tsv` file containing all the movements in a tab separated format. This file includes also the movements missing some informations (e.g. the coodrdinates)
