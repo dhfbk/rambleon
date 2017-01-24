@@ -27,7 +27,7 @@ delay_nominatim = float(config.get('config', 'delay_nominatim'))
 use_pantheon_file = False
 use_more_chains = False
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "p:el:o:",["","",""])
+    opts, args = getopt.getopt(sys.argv[1:], "p:l:o:e",["","",""])
 except getopt.GetoptError:
     sys.exit(2)
 for opt, arg in opts:
@@ -49,7 +49,7 @@ def wiki_bio_download (list_file_name, out_dir):
             os.makedirs(out_dir)
         if not os.path.exists(out_dir+"/"+name+".html"):
             url="https://en.wikipedia.org/wiki/"+name
-            sys.stdout.write("    Downloading "+name+"\n")
+            sys.stdout.write("    Downloading "+name.encode('utf8')+"\n")
             url = urllib2.quote(url.encode('utf8'), ':/')
             response = urllib2.urlopen(url)
             html = response.read()
@@ -86,7 +86,7 @@ def txt_to_naf(list_file_name, txt_files_dir, out_dir):
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         if not os.path.exists(naf_path):
-            sys.stdout.write("    "+name + "->.naf\n")
+            sys.stdout.write("    "+name.encode('utf8') + "->.naf\n")
             for line in codecs.open(txt_path, 'r', "utf-8"):
                 line = line.rstrip('\n')
                 document=document+" "+line
@@ -1046,8 +1046,9 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
     sys.stdout.write('\n')
 
 
-
+print "Downloading pages:"
 wiki_bio_download(list_file, "output_html_files")
+print "Cleaning html..."
 clean_wiki_pages(list_file, "output_html_files", "output_txt_files")
 txt_to_naf(list_file, "output_txt_files", "output_naf_files")
 extract_movements ("output_naf_files",list_file, movements_output_file+".tsv", use_pantheon_file,pantheon_data_file,use_more_chains)
