@@ -654,6 +654,8 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                     student_found = 0
                     need_employee = 0
                     employee_found = 0
+                    need_recipient = 0
+                    recipient_found = 0
                     negation_found = 0
                     need_nothing = None
 
@@ -678,15 +680,22 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                     or "Colonization" == ref.get_reference() \
                                     or "Temporary_stay" == ref.get_reference() \
                                     or "Transfer" == ref.get_reference() \
-                                    or "Transfer" == ref.get_reference() \
-                                    or "Sending" == ref.get_reference()):
+                                    or "Detaining" == ref.get_reference() \
+                                    or "Receiving" == ref.get_reference() \
+                                    or "Working_on" == ref.get_reference() \
+                                    or "Inhibit_movement" == ref.get_reference() \
+                                    or "Used_up" == ref.get_reference() \
+                                    or "Sending" == ref.get_reference() \
+                                    or "Becoming_a_member" == ref.get_reference()\
+                                    or "Bringing" == ref.get_reference() \
+                                    or "Conquering" == ref.get_reference()\
+                                    or "Speak_on_topic" == ref.get_reference()):
 
                                 if "Sending" == ref.get_reference() \
                                         or "Departing" == ref.get_reference() \
-                                        or "Transfer" == ref.get_reference():
-                                    need_theme = 1
-                                elif "Cotheme" == ref.get_reference():
-                                    need_cotheme = 1
+                                        or "Transfer" == ref.get_reference() \
+                                        or "Bringing" == ref.get_reference() \
+                                        or "Cotheme" == ref.get_reference():
                                     need_theme = 1
 
                                 elif "State_continue" == ref.get_reference():
@@ -699,6 +708,8 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                     need_student = 1
                                 elif "Being_employed" == ref.get_reference():
                                     need_employee = 1
+                                elif "Receiving" == ref.get_reference():
+                                    need_recipient = 1
                                 else:
                                     need_nothing = True
                                 resource = ref.get_resource()
@@ -732,7 +743,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                                             timex_to_print = timex_to_print + ' '
 
 
-                                        theme,employee,entity,resident,self_mover,student,cotheme = None, None, None, None, None, None, None
+                                        theme,employee,entity,resident,self_mover,student,cotheme,recipient = None, None, None, None, None, None, None, None
 
                                         for rol in roles:
                                             rol_span = rol.get_span()
@@ -756,6 +767,10 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                             if need_employee == 1 and not employee:
                                                 if (role_filter('FrameNet', 'Employee', rol, rol_span, dict_t_to_w, list_coref_w)) == 1:
                                                     employee = True
+
+                                            if need_recipient == 1 and not recipient:
+                                                if (role_filter('FrameNet', 'Recipient', rol, rol_span, dict_t_to_w,list_coref_w)) == 1:
+                                                    recipient = True
 
                                             if need_resident == 1 and not resident:
                                                 if (role_filter('FrameNet', 'Resident', rol, rol_span, dict_t_to_w, list_coref_w)) == 1:
@@ -905,6 +920,16 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                                 or dict_t_to_lemma[span.get_id()] == "inspector" \
                                                 or dict_t_to_lemma[span.get_id()] == "Inspector" \
                                                 or dict_t_to_lemma[span.get_id()] == "overnight" \
+                                                or dict_t_to_lemma[span.get_id()] == "lock" \
+                                                or dict_t_to_lemma[span.get_id()] == "shut up" \
+                                                or dict_t_to_lemma[span.get_id()] == "hold" \
+                                                or dict_t_to_lemma[span.get_id()] == "tie" \
+                                                or dict_t_to_lemma[span.get_id()] == "enlist" \
+                                                or dict_t_to_lemma[span.get_id()] == "enlisted" \
+                                                or dict_t_to_lemma[span.get_id()] == "takeover" \
+                                                or dict_t_to_lemma[span.get_id()] == "bring" \
+                                                or dict_t_to_lemma[span.get_id()] == "take" \
+                                                or dict_t_to_lemma[span.get_id()] == "truck" \
                                                 or dict_t_to_lemma[span.get_id()] == "push":
                                             exlude_predicate = 1
 
