@@ -996,7 +996,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                                                             distance = abs(difference)
                                                             timex_to_print =timex_item_splitted[0]
 
-
+    
                                                 timex_to_print_list = timex_to_print.split("_")
                                                 timex_to_print = timex_to_print_list[0]
                                                 timex_to_print = re.sub(r'\*\*[0-9][0-9]', '0000', timex_to_print)
