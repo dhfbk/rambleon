@@ -1039,10 +1039,17 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                     out_movements_file.write( enc_file_name + '\t' + dict_nation[enc_file_name] + '\t' + dict_continent[enc_file_name] + '\t' + dict_gender[enc_file_name] + '\t' + dict_profession[enc_file_name] + '\t' + dict_group[enc_file_name] + '\t' +dict_area[enc_file_name].strip('\n') + '\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Death_' + '\t' + str(year_d)+ '\t' + location_d + '\t' + 'null_' + "\t" + "lat: " + lat_d.encode("utf8") + '\t' + "lon: " + lon_d.encode("utf8") )
                     out_movements_file.write('\tnull_\n')
                 else:
-                    out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Birth_' + '\t' + str(year_b) + '\t' + location_b + '\t' + 'null_' + "\t" + "lat: " + lat_b.encode("utf8") + '\t' + "lon: " + lon_b.encode("utf8"))
-                    out_movements_file.write('\tnull_\n')
-                    out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Death_' + '\t' + str(year_d) + '\t' + location_d + '\t' + 'null_' + "\t" + "lat: " + lat_d.encode("utf8") + '\t' + "lon: " + lon_d.encode("utf8"))
-                    out_movements_file.write('\tnull_\n')
+                    year_d = re.sub(r'T.*', '', year_d)
+                    year_b = re.sub(r'T.*', '', year_b)
+                    
+                    if str(location_b) != "NA":
+                        print(location_b)
+                        out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Birth_' + '\t' + str(year_b) + '\t' + location_b + '\t' + 'null_' + "\t" + "lat: " + lat_b.encode("utf8") + '\t' + "lon: " + lon_b.encode("utf8"))
+                        out_movements_file.write('\tnull_\n')
+                    if str(location_d) != "NA":
+                        print(location_d)
+                        out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Death_' + '\t' + str(year_d) + '\t' + location_d + '\t' + 'null_' + "\t" + "lat: " + lat_d.encode("utf8") + '\t' + "lon: " + lon_d.encode("utf8"))
+                        out_movements_file.write('\tnull_\n')
 
     out_movements_file.close()
     sys.stdout.write('\n')
