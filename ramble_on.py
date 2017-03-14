@@ -99,6 +99,7 @@ def txt_to_naf(list_file_name, txt_files_dir, out_dir):
             response = urllib2.urlopen(req)
             naf = response.read()
             response = naf.decode('utf8')
+            name = urllib.unquote(name).decode('utf8')
             outname = out_dir + "/" + name + ".naf"
             # outname=outname.decode("utf-8")
             naf_out = codecs.open(outname, 'w', "utf-8")
