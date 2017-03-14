@@ -26,6 +26,7 @@ delay_nominatim = float(config.get('config', 'delay_nominatim'))
 
 use_pantheon_file = False
 use_more_chains = False
+pantheon_data_file = ""
 try:
     opts, args = getopt.getopt(sys.argv[1:], "p:l:o:e",["","",""])
 except getopt.GetoptError:
@@ -91,6 +92,7 @@ def txt_to_naf(list_file_name, txt_files_dir, out_dir):
                 line = line.rstrip('\n')
                 document=document+" "+line
             document = urllib2.quote(document.encode('utf8'), ':/')
+            name = urllib2.quote(name.encode('utf8'), ':/')
             #data="text="+document
             data="meta_title="+name+"&meta_filename="+name+"&text="+document
             req = urllib2.Request(pikes_url, data)
