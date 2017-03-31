@@ -48,14 +48,14 @@ def wiki_bio_download (list_file_name, out_dir):
         name=name.rstrip('\n')
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-        if not os.path.exists(out_dir+"/"+name+".html"):
+        if not os.path.exists(out_dir+os.sep+name+".html"):
             url="https://en.wikipedia.org/wiki/"+name
             sys.stdout.write("    Downloading "+name.encode('utf8')+"\n")
             url = urllib2.quote(url.encode('utf8'), ':/')
             response = urllib2.urlopen(url)
             html = response.read()
             html = html.decode('utf8')
-            outname = out_dir+"/"+name+".html"
+            outname = out_dir+os.sep+name+".html"
             html_out = codecs.open(outname, 'w',  "utf-8")
             html_out.write(html)
     sys.stdout.write("All files downloaded\n")
@@ -63,10 +63,10 @@ def wiki_bio_download (list_file_name, out_dir):
 def clean_wiki_pages(list_file_name, html_files_dir, out_dir):
     for name in codecs.open(list_file_name, 'r', "utf-8"):
         name = name.rstrip('\n')
-        path = html_files_dir+"/"+name+".html"
+        path = html_files_dir+os.sep+name+".html"
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
-        outname = out_dir + "/" + name + ".txt"
+        outname = out_dir + os.sep + name + ".txt"
         if not os.path.exists(outname):
             txt_out = codecs.open(outname, 'w', "utf-8")
             p = subprocess.Popen(['perl', 'wiki_cleaner.pl', path], stdout=subprocess.PIPE, stderr = subprocess.PIPE)
@@ -82,8 +82,8 @@ def txt_to_naf(list_file_name, txt_files_dir, out_dir):
     for name in open(list_file_name):
         document = u''
         name = name.rstrip('\n')
-        txt_path = txt_files_dir + "/" + name + ".txt"
-        naf_path = out_dir + "/" + name + ".naf"
+        txt_path = txt_files_dir + os.sep + name + ".txt"
+        naf_path = out_dir + os.sep + name + ".naf"
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         if not os.path.exists(naf_path):
@@ -100,7 +100,7 @@ def txt_to_naf(list_file_name, txt_files_dir, out_dir):
             naf = response.read()
             response = naf.decode('utf8')
             name = urllib.unquote(name).decode('utf8')
-            outname = out_dir + "/" + name + ".naf"
+            outname = out_dir + os.sep + name + ".naf"
             # outname=outname.decode("utf-8")
             naf_out = codecs.open(outname, 'w', "utf-8")
             naf_out.write(response)
