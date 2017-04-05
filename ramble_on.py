@@ -69,7 +69,7 @@ def clean_wiki_pages(list_file_name, html_files_dir, out_dir):
         outname = out_dir + os.sep + name + ".txt"
         if not os.path.exists(outname):
             txt_out = codecs.open(outname, 'w', "utf-8")
-            p = subprocess.Popen(['perl', 'wiki_cleaner.pl', path], stdout=subprocess.PIPE, stderr = subprocess.PIPE)
+            p = subprocess.Popen(['perl', 'wiki_cleaner.pl', path.encode(sys.getfilesystemencoding())], stdout=subprocess.PIPE, stderr = subprocess.PIPE)
             clean_text, err = p.communicate()
             clean_text = clean_text.decode('utf8')
             txt_out.write(clean_text)
@@ -87,12 +87,12 @@ def txt_to_naf(list_file_name, txt_files_dir, out_dir):
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
         if not os.path.exists(naf_path):
-            sys.stdout.write("    "+name.encode('utf8') + "->.naf\n")
-            for line in codecs.open(txt_path, 'r', "utf-8"):
+            sys.stdout.write("    "+ name + "->.naf\n")
+            for line in codecs.open(txt_path.decode('utf-8').encode(sys.getfilesystemencoding()), 'r', "utf-8"):
                 line = line.rstrip('\n')
                 document=document+" "+line
             document = urllib2.quote(document.encode('utf8'), ':/')
-            name = urllib2.quote(name.encode('utf8'), ':/')
+            name = urllib2.quote(name.decode('utf-8').encode('utf8'), ':/')
             #data="text="+document
             data="meta_title="+name+"&meta_filename="+name+"&text="+document
             req = urllib2.Request(pikes_url, data)
