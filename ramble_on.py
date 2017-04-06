@@ -408,7 +408,7 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
             list_check=file
             list_check = re.sub(r'\.naf', '', list_check)
             if file==file:
-                my_parser = KafNafParser(naf_folder+"/"+file)
+                my_parser = KafNafParser(naf_folder+os.sep+file)
                 movements_found = 0
                 movements_number=0
                 dict_timex = dict()
