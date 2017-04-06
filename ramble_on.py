@@ -1043,11 +1043,11 @@ def extract_movements (naf_folder,list_file, movements_output_file, use_pantheon
                     year_b = re.sub(r'T.*', '', year_b)
                     
                     if str(location_b) != "NA":
-                        print(location_b)
+                        #print(location_b)
                         out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Birth_' + '\t' + str(year_b) + '\t' + location_b + '\t' + 'null_' + "\t" + "lat: " + lat_b.encode("utf8") + '\t' + "lon: " + lon_b.encode("utf8"))
                         out_movements_file.write('\tnull_\n')
                     if str(location_d) != "NA":
-                        print(location_d)
+                        #print(location_d)
                         out_movements_file.write(enc_file_name + '\tnull_\tnull_\tnull_\tnull_\tnull_\tnull_\t' + 'null_' + '\t' + 'null_' + '\t' + 'dbpedia_' + '\t' + 'Death_' + '\t' + str(year_d) + '\t' + location_d + '\t' + 'null_' + "\t" + "lat: " + lat_d.encode("utf8") + '\t' + "lon: " + lon_d.encode("utf8"))
                         out_movements_file.write('\tnull_\n')
 
