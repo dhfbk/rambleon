@@ -90,7 +90,7 @@ def txt_to_naf(list_file_name, txt_files_dir, out_dir):
             sys.stdout.write("    "+ name + "->.naf\n")
             for line in codecs.open(txt_path.decode('utf-8').encode(sys.getfilesystemencoding()), 'r', "utf-8"):
                 line = line.rstrip('\n')
-                document=document+" "+line
+                document=document+"\n"+line
             document = urllib2.quote(document.encode('utf8'), ':/')
             name = urllib2.quote(name.decode('utf-8').encode('utf8'), ':/')
             #data="text="+document
